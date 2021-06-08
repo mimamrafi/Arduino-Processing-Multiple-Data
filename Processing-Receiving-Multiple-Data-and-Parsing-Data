@@ -1,0 +1,77 @@
+import processing.serial.*;
+
+Serial myPort;        // The serial port
+float inByte1;         // Incoming serial data
+float inByte2;         // Incoming serial data
+boolean newData = false;
+boolean newValue = false;
+int xPos = 100;         // horizontal position of the graph 
+float sensors[];
+
+//Variables to draw a continuous line.
+int lastxPos1=100;
+int lastxPos2=100;
+int lastheight1=400;
+int lastheight2=400;
+
+void setup () {
+  // set the window size:
+  size(600, 400);        
+
+  myPort = new Serial(this, "COM10", 9600);  
+
+  // A serialEvent() is generated when a newline character is received :
+  myPort.bufferUntil('\n');
+  background(0);      // set inital background:
+   
+  
+}
+void draw () {
+  if (newData) {
+    //Drawing a line from Last inByte to the new one.
+    stroke(127,34,255);     //stroke color
+    strokeWeight(4);        //stroke wider
+    line(lastxPos1, lastheight1, xPos, height - inByte1); 
+    lastxPos1= xPos;
+    lastheight1= int(height-inByte1);
+    line(lastxPos2, lastheight2, xPos, height - inByte2); 
+    lastxPos2= xPos;
+    lastheight2= int(height-inByte2);
+    
+    //if(newValue){
+    //  text(inBytee, xPos,height - inByte - 10);
+    //}
+    // at the edge of the window, go back to the beginning:
+    if (xPos >= width) {
+      xPos = 0;
+      lastxPos1= 0;
+      lastxPos2= 0;
+      background(0);  //Clear the screen.
+    } 
+    else {
+      // increment the horizontal position:
+      xPos++;
+    }
+    
+   newData =false;
+   newValue = false;
+ }
+}
+
+
+void serialEvent (Serial myPort) {
+  // get the ASCII string:
+  String myString = myPort.readStringUntil('\n');
+  if (myString != null) {
+    myString = trim(myString);           // trim off whitespaces.
+    sensors = float(split(myString, ','));
+    inByte1 = sensors[0];           // convert to a number.
+    inByte1 = map(inByte1, 0, 1023, 0, height); //map to the screen height.
+    inByte2 = sensors[1];           // convert to a number.
+    inByte2 = map(inByte2, 0, 1023, 0, height); //map to the screen height.
+    
+    newData = true;
+    newValue = true;
+    
+  }
+}
